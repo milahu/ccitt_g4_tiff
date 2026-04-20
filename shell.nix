@@ -5,5 +5,9 @@ with pkgs;
 mkShell {
   buildInputs = [
     cmake
+
+    # checkInputs
+    imagemagick
+    libtiff
   ];
 }
