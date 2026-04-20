@@ -169,8 +169,8 @@ public:
                     break;
 
                 default:
-                    // STRICT MODE: reject unknown tags for safety
-                    throw std::runtime_error("Unsupported TIFF tag");
+                    // ignore unknown tags
+                    continue;
             }
         }
 
