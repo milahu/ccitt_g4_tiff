@@ -115,6 +115,11 @@ https://en.wikipedia.org/wiki/Group_4_compression
 > as well as standardized formats such as TIFF, CALS,  
 > CIT (Intergraph Raster Type 24) and the PDF document format.  
 
+https://github.com/photopea/UTIF.js
+
+TIFF decoder written in javascript,
+also supports CCITT Group 4 compression
+
 
 
 ## TIFF parsers
