@@ -133,6 +133,8 @@ no CCITT-G4 compression
 
 ## CCITT-G4 decoders
 
+https://pdfium.googlesource.com/pdfium/+/refs/heads/main/core/fxcodec/fax/faxmodule.cpp
+
 https://gitlab.com/libtiff/libtiff/-/blob/master/libtiff/tif_fax3.c
 
 
