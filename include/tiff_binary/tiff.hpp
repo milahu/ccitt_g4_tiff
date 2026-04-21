@@ -5,6 +5,8 @@
 #include <cstring>
 #include <limits>
 
+#include "tiff_binary/ccitt_g4.hpp"
+
 namespace tiff_binary {
 
 enum Tag : uint16_t {
@@ -25,6 +27,11 @@ enum Compression : uint32_t {
     JBIG2 = 34712
 };
 
+struct StripView {
+    const uint8_t* data;
+    uint32_t size;
+};
+
 struct TiffImage {
     uint32_t width = 0;
     uint32_t height = 0;
@@ -36,7 +43,40 @@ struct TiffImage {
 
     uint16_t bits_per_sample = 1;
     uint16_t samples_per_pixel = 1;
+
+    std::vector<uint8_t> pixels;
+
+    std::vector<StripView> get_strips(const uint8_t* file_data) const {
+        std::vector<StripView> out;
+
+        for (size_t i = 0; i < strip_offsets.size(); i++) {
+            StripView s;
+            s.data = file_data + strip_offsets[i];
+            s.size = strip_byte_counts[i];
+            out.push_back(s);
+        }
+
+        return out;
+    }
 };
+
+/*
+static std::vector<StripView> get_strips(
+    const TiffImage& img,
+    const uint8_t* file_data
+) {
+    std::vector<StripView> out;
+
+    for (size_t i = 0; i < img.strip_offsets.size(); i++) {
+        out.push_back(StripView{
+            file_data + img.strip_offsets[i],
+            img.strip_byte_counts[i]
+        });
+    }
+
+    return out;
+}
+*/
 
 class ByteReader {
 public:
@@ -148,6 +188,38 @@ static inline uint32_t read_u32_le(const uint8_t* data, size_t size, uint32_t of
          | (uint32_t)data[offset + 3] << 24;
 }
 
+class BitReader {
+public:
+    BitReader(const uint8_t* data, size_t size)
+        : data_(data), size_(size) {}
+
+    uint32_t read_bit() {
+        if (byte_pos_ >= size_) {
+            throw std::runtime_error("BitReader EOF");
+        }
+
+        uint8_t byte = data_[byte_pos_];
+
+        // MSB-first (default TIFF FillOrder=1)
+        uint32_t bit = (byte >> (7 - bit_pos_)) & 1;
+
+        bit_pos_++;
+        if (bit_pos_ == 8) {
+            bit_pos_ = 0;
+            byte_pos_++;
+        }
+
+        return bit;
+    }
+
+private:
+    const uint8_t* data_;
+    size_t size_;
+
+    size_t byte_pos_ = 0;
+    int bit_pos_ = 0;
+};
+
 class TiffParser {
 public:
     static TiffImage parse(const uint8_t* data, size_t size) {
@@ -206,6 +278,8 @@ public:
         uint32_t strip_byte_counts_count = 0;
         uint32_t strip_byte_counts_vo = 0;
 
+        uint32_t rows_per_strip = 0;
+
         for (int i = 0; i < entry_count; i++) {
             uint16_t tag = r.read<uint16_t>();
             uint16_t type = r.read<uint16_t>();
@@ -251,6 +325,10 @@ public:
                     has_strip_count = true;
                     break;
 
+                case ROWS_PER_STRIP:
+                    rows_per_strip = read_value(data, size, little_endian, type, count, value_or_offset);
+                    break;
+
                 default:
                     // ignore unknown tags
                     continue;
@@ -289,6 +367,10 @@ public:
 
         if (strip_offsets_count != strip_byte_counts_count) {
             throw std::runtime_error("Mismatched strip arrays");
+        }
+
+        if (rows_per_strip == 0) {
+            rows_per_strip = img.height; // fallback (legal TIFF behavior)
         }
 
         auto read_array = [&](
@@ -334,6 +416,58 @@ public:
                 throw std::runtime_error("Strip out of bounds");
             }
         }
+
+        std::vector<StripView> strips;
+
+        for (size_t i = 0; i < img.strip_offsets.size(); i++) {
+            strips.push_back({
+                data + img.strip_offsets[i],
+                img.strip_byte_counts[i]
+            });
+        }
+
+        std::vector<uint8_t> decoded;
+        decoded.reserve(img.width * img.height);
+
+        uint32_t rows_decoded = 0;
+        std::vector<uint8_t> ref_row(img.width, 0);
+
+        for (size_t i = 0; i < strips.size(); i++) {
+            const auto& strip = strips[i];
+
+            uint32_t rows = std::min(rows_per_strip, img.height - rows_decoded);
+
+            std::vector<uint8_t> strip_out;
+            strip_out.reserve(rows * img.width);
+
+            // debug
+            std::cout
+                << "Decoding strip " << i
+                << " rows=" << rows
+                << " offset=" << img.strip_offsets[i]
+                << "\n"
+            ;
+
+            decode_ccitt_g4(
+                strip.data,
+                strip.size,
+                img.width,
+                rows,
+                rows_per_strip,
+                strip_out
+            );
+
+            // append to final image
+            decoded.insert(decoded.end(), strip_out.begin(), strip_out.end());
+
+            rows_decoded += rows;
+        }
+
+        if (decoded.size() != img.width * img.height) {
+            throw std::runtime_error("Final image size mismatch");
+        }
+
+        img.pixels = std::move(decoded);
 
         return img;
     }
