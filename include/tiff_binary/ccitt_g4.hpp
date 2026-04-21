@@ -9,7 +9,6 @@ bool decode_ccitt_g4(
     size_t size,
     uint32_t width,
     uint32_t height,
-    uint32_t rows_per_strip,
     std::vector<uint8_t>& out
 );
 

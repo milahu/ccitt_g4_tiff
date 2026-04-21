@@ -2,9 +2,18 @@
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
+#include <array>
 
 namespace tiff_binary {
 
+
+
+
+
+
+
+
+#if false
 // ---------------- Bitstream ----------------
 
 struct BitStream {
@@ -180,6 +189,63 @@ bool decode_ccitt_g4(
     }
 
     return true;
+}
+
+#endif
+
+
+
+#include "third_party/pdfium/core/fxcrt/span.h"
+
+#include "third_party/pdfium/core/fxcodec/fax/faxmodule.h"
+
+
+
+// // stub macros if needed
+// #ifndef DCHECK
+// #include <cassert>
+// #define DCHECK(x) assert(x)
+// #endif
+
+
+
+bool decode_ccitt_g4(
+    const uint8_t* data,
+    size_t size,
+    uint32_t width,
+    uint32_t height,
+    uint32_t rows_per_strip, // FIXME unused
+    std::vector<uint8_t>& out)
+{
+    if (!data || size == 0 || width == 0 || height == 0)
+        return false;
+
+    // PDFium expects packed 1bpp rows
+    uint32_t stride = (width + 7) / 8;
+
+    out.clear();
+    out.resize(stride * height);
+
+    // wrap input
+#if __cplusplus >= 202002L
+    std::span<const uint8_t> src(data, size);
+#else
+    pdfium::span<const uint8_t> src(data, size);
+#endif
+
+    // Create fax module
+    CFX_FaxModule fax;
+
+    // PDFium API (simplified usage)
+    bool result = fax.FaxG4Decode(
+        src,
+        width,
+        height,
+        stride,
+        out.data()
+    );
+
+    return result;
 }
 
 } // namespace tiff_binary

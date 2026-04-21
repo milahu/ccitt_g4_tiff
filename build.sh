@@ -6,4 +6,5 @@ mkdir -p build
 cd build
 set -x
 cmake ..
-make
+# make
+cmake --build . --verbose
