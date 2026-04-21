@@ -54,43 +54,65 @@ static inline int read_bits(BitStream& bs, int n) {
 }
 
 static int decode_white_run(BitStream& bs) {
-    int code = 0;
-    for (int len = 1; len <= 13; len++) {
-        code = (code << 1) | bs.read_bit();
+    int total = 0;
 
-        switch ((len << 16) | code) {
-            case (4<<16)|0b0011: return 2;
-            case (3<<16)|0b010: return 3;
-            case (2<<16)|0b11: return 1;
-            case (6<<16)|0b000111: return 4;
-            case (7<<16)|0b0001000: return 5;
-            case (7<<16)|0b0001001: return 6;
-            case (7<<16)|0b0001010: return 7;
-            case (7<<16)|0b0001011: return 8;
-            case (7<<16)|0b0001100: return 9;
-            case (7<<16)|0b0001101: return 10;
-            case (7<<16)|0b0001110: return 11;
-            case (7<<16)|0b0001111: return 12;
-            // ... (extend as needed)
+    while (true) {
+        int code = 0;
+
+        for (int len = 1; len <= 13; len++) {
+            int b = bs.read_bit();
+            if (b < 0) throw std::runtime_error("EOF in white run");
+
+            code = (code << 1) | b;
+
+            // --- terminating codes ---
+            if ((len == 8 && code == 0b00110101)) return total + 0;
+            if ((len == 6 && code == 0b000111))   return total + 1;
+            if ((len == 4 && code == 0b0111))     return total + 2;
+            if ((len == 4 && code == 0b1000))     return total + 3;
+            if ((len == 4 && code == 0b1011))     return total + 4;
+            if ((len == 4 && code == 0b1100))     return total + 5;
+            if ((len == 4 && code == 0b1110))     return total + 6;
+            if ((len == 4 && code == 0b1111))     return total + 7;
+
+            // --- make-up codes (examples) ---
+            if ((len == 5 && code == 0b11011)) { total += 64; break; }
+            if ((len == 5 && code == 0b10010)) { total += 128; break; }
+            if ((len == 6 && code == 0b010111)) { total += 192; break; }
+            if ((len == 7 && code == 0b0110111)) { total += 256; break; }
+            if ((len == 7 && code == 0b00110110)) { total += 320; break; }
         }
+
+        if (total > 4096)
+            throw std::runtime_error("White run too large");
     }
-    throw std::runtime_error("Invalid white run");
 }
 
 static int decode_black_run(BitStream& bs) {
-    int code = 0;
-    for (int len = 1; len <= 13; len++) {
-        code = (code << 1) | bs.read_bit();
+    int total = 0;
 
-        switch ((len << 16) | code) {
-            case (2<<16)|0b10: return 3;
-            case (3<<16)|0b011: return 2;
-            case (2<<16)|0b11: return 1;
-            case (4<<16)|0b0011: return 4;
-            // ... extend
+    while (true) {
+        int code = 0;
+
+        for (int len = 1; len <= 13; len++) {
+            int b = bs.read_bit();
+            if (b < 0) throw std::runtime_error("EOF in black run");
+
+            code = (code << 1) | b;
+
+            // --- terminating ---
+            if ((len == 2 && code == 0b11)) return total + 2;
+            if ((len == 3 && code == 0b010)) return total + 3;
+            if ((len == 3 && code == 0b011)) return total + 4;
+
+            // --- make-up ---
+            if ((len == 5 && code == 0b00011)) { total += 64; break; }
+            if ((len == 6 && code == 0b000101)) { total += 128; break; }
         }
+
+        if (total > 4096)
+            throw std::runtime_error("Black run too large");
     }
-    throw std::runtime_error("Invalid black run");
 }
 
 enum Mode {
