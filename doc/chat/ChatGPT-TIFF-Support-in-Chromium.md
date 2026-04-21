@@ -3,7 +3,7 @@
 **User:** Milan Hauth (milahu@gmail.com)  
 **Created:** 2026/4/20 18:11:54  
 **Updated:** 2026/4/21 7:56:14  
-**Exported:** 2026/4/21 7:57:01  
+**Exported:** 2026/4/21 8:04:31  
 **Link:** [https://chatgpt.com/c/69e6501d-69e0-83eb-bc60-8a47f4cf08b9](https://chatgpt.com/c/69e6501d-69e0-83eb-bc60-8a47f4cf08b9)  
 
 ## Prompt:
