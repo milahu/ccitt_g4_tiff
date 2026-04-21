@@ -5,9 +5,9 @@
 #include <cstring>
 #include <limits>
 
-#include "tiff_ccitt_g4/ccitt_g4.hpp"
+#include "ccitt_g4_tiff/ccitt_g4.hpp"
 
-namespace tiff_ccitt_g4 {
+namespace ccitt_g4_tiff {
 
 enum Tag : uint16_t {
     IMAGE_WIDTH = 256,
@@ -479,4 +479,4 @@ public:
     }
 };
 
-} // namespace tiff_ccitt_g4
+} // namespace ccitt_g4_tiff

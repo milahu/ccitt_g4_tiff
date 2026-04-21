@@ -1,4 +1,4 @@
-#include "tiff_ccitt_g4/ccitt_g4.hpp"
+#include "ccitt_g4_tiff/ccitt_g4.hpp"
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
@@ -9,7 +9,7 @@
 
 
 
-namespace tiff_ccitt_g4 {
+namespace ccitt_g4_tiff {
 
 
 
@@ -244,4 +244,4 @@ uint32_t decode_ccitt_g4(
     return done_input_bytes;
 }
 
-} // namespace tiff_ccitt_g4
+} // namespace ccitt_g4_tiff

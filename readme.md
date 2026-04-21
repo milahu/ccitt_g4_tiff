@@ -1,4 +1,4 @@
-# tiff_ccitt_g4
+# ccitt_g4_tiff
 
 Group4-compressed TIFF images for Chromium
 

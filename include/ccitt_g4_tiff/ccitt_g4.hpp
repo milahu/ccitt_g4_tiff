@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace tiff_ccitt_g4 {
+namespace ccitt_g4_tiff {
 
 uint32_t decode_ccitt_g4(
     const uint8_t* data,
