@@ -231,16 +231,17 @@ uint32_t decode_ccitt_g4(
     pdfium::span<const uint8_t> src_span(data, size);
     pdfium::span<uint8_t> dest_buf(out.data(), out.size());
 
-    uint32_t written = fxcodec::FaxModule::FaxG4Decode(
+    uint32_t done_input_bytes = fxcodec::FaxModule::FaxG4Decode(
         src_span,
         starting_bitpos,
         width,
         height,
+        // rows_per_strip, // "height"
         pitch,
         dest_buf
     );
 
-    return written;
+    return done_input_bytes;
 }
 
 } // namespace tiff_binary

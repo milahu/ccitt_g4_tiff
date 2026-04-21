@@ -448,30 +448,30 @@ public:
                 << "\n"
             ;
 
-            uint32_t written = decode_ccitt_g4(
+            uint32_t done_input_bytes = decode_ccitt_g4(
                 strip.data,
                 strip.size,
                 img.width,
-                rows,
-                // rows_per_strip,
+                rows_per_strip, // "height"
                 strip_out
             );
 
+            // TODO? check done_input_bytes
+
+            #if false
             // debug
-            std::cout
-                << "Decoded strip " << i
-                << " written=" << written
-                << "\n"
-            ;
+            uint32_t pitch = (img.width + 7) / 8;
+            std::cout << "img.width: " << img.width << "\n";
+            std::cout << "img.height: " << img.height << "\n";
+            std::cout << "pitch: " << pitch << "\n";
+            std::cout << "rows_per_strip: " << rows_per_strip << "\n";
+            std::cout << "done_input_bytes: " << done_input_bytes << "\n";
+            #endif
 
             // append to final image
             decoded.insert(decoded.end(), strip_out.begin(), strip_out.end());
 
             rows_decoded += rows;
-        }
-
-        if (decoded.size() != img.width * img.height) {
-            throw std::runtime_error("Final image size mismatch");
         }
 
         img.pixels = std::move(decoded);
