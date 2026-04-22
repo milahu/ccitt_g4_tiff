@@ -57,6 +57,9 @@ if(EMSCRIPTEN)
         ccitt_g4_tiff
     )
 
+    # see also
+    # https://github.com/paulocoutinhox/pdfium-lib/blob/master/modules/wasm.py
+
     target_link_options(tiff_wasm PRIVATE
         "-sWASM=1"
         "-sMODULARIZE=1"
