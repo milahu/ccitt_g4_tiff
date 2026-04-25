@@ -1,0 +1,138 @@
+Date: Sat, 25 Apr 2026 06:42:09 -0700 (PDT)
+From: Milan Hauth <milahu@gmail.com>
+To: Chromium-discuss <chromium-discuss@chromium.org>
+Message-Id: <2cc26c1b-fb85-4591-982f-eed8442cf21bn@chromium.org>
+Subject: [chromium-discuss] feat: Group4 image compression
+Content-Type: text/plain; charset="UTF-8"
+
+Group4 compression is useful for bitonal images
+(single-bit depth, monochrome, black/white, binary images)
+usually images of text with high resolution (600dpi)
+
+the Group4 compression method
+is already supported in the PDF format
+which is supported by most web browsers
+
+the only usable alternative is the AVIF image format
+but compressing AVIF images
+takes about 120 times more CPU time
+to get similar visual quality
+with quality=20% and speed=6
+at 40% more output file size
+
+in a future without cheap energy
+cheap compression methods like Group4
+will become more interesting again
+even if most use cases are "write once read many"
+
+Group4 images in web browsers
+are useful for EPUB-FXL documents (FXL = fixed layout)
+which are similar to PDF documents, but implemented in HTML
+see also
+https://github.com/internetarchive/archive-hocr-tools/pull/23
+
+
+
+complexity
+
+the TIFF image format is complex
+which is probably why it is not-yet supported by chromium
+(high complexity = large attack surface)
+so i would drastically limit the feature set to
+
+- Group 4 compression
+- one strip
+- one image
+- 1-bit depth only
+- size limits (file size, width, height)
+
+... which allows us to write a minimal TIFF parser
+and integrate an existing Group4 decoder
+to reduce the attack surface
+
+
+
+browser support
+
+some web browsers already support TIFF images
+probably with different feature sets
+
+- Amaya
+- Avast Secure Browser
+- Falkon
+- Internet Explorer
+- Ladybird
+- Links
+- OmniWeb
+- Safari
+- Shiira
+- WorldWideWeb
+
+... based on
+https://en.wikipedia.org/wiki/Comparison_of_web_browsers#Image_format_support
+
+
+
+related
+
+https://github.com/milahu/group4-polyfill
+decode Group4 images in a web browser
+
+https://github.com/Fyrd/caniuse/issues/4281
+Tiff image format
+
+https://stackoverflow.com/questions/2176991
+How would I display a TIFF images in all web browsers?
+
+https://en.wikipedia.org/wiki/TIFF
+
+> TIFF is a complex format, defining many tags
+> of which typically only a few are used in each file.
+> This led to implementations
+> supporting many varying subsets of the format,
+> a situation that gave rise to the joke that TIFF stands for
+> Thousands of Incompatible File Formats.
+> This problem was addressed in revision 6.0
+> of the TIFF specification (June 1992)
+> by introducing a distinction between Baseline TIFF
+> (which all implementations were required to support)
+> and TIFF Extensions (which are optional). 
+
+https://en.wikipedia.org/wiki/Group_4_compression
+
+> Group 4 compression is available in many proprietary image file formats
+> as well as standardized formats such as TIFF, CALS,
+> CIT (Intergraph Raster Type 24) and the PDF document format.
+
+https://en.wikipedia.org/wiki/Binary_image
+
+
+
+TIFF parsers
+
+https://gitlab.com/libtiff/libtiff
+many features
+complex = risky
+
+https://github.com/jkriege2/TinyTIFF
+no compression
+
+https://github.com/syoyo/tinydng
+DNG and TIFF format
+no Group4 compression
+
+
+
+Group4 decoders
+
+https://pdfium.googlesource.com/pdfium/+/refs/heads/main/core/fxcodec/fax/faxmodule.cpp
+
+https://gitlab.com/libtiff/libtiff/-/blob/master/libtiff/tif_fax3.c
+
+
+
+almost there
+
+most of the code is already implemented in pdfium
+(TIFF parser and Group4 decoder)
+so we just need some glue code to support Group4 images
